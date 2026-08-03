@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel Cat Widget</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #4a4a4a;
+      --btn-color: #a2d2ff;
+      --btn-hover: #8ecae6;
+      --btn-disabled: #d3d3d3;
+    }
+
+    body {
+      margin: 0;
+      padding: 15px;
+      font-family: 'Courier New', Courier, monospace;
+      background-color: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-color);
+      position: relative;
+      user-select: none;
+    }
+
+    /* Test-Knopf oben links */
+    .skip-btn {
+      position: absolute;
+      top: 10px;
+      left: 15px;
+      background-color: #fff3bf;
+      border: 1px solid #ffe066;
+      border-radius: 10px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 0.1s ease;
+    }
+
+    .skip-btn:hover {
+      transform: scale(1.1);
+      background-color: #ffec99;
+    }
+
+    .skip-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Counter oben rechts */
+    .counter {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 14px;
+      font-weight: bold;
+      background-color: #f0f8ff;
+      padding: 4px 8px;
+      border-radius: 10px;
+      border: 1px solid #d0e8ff;
+    }
+
+    /* Pixel Katze */
+    .cat-container {
+      margin-top: 25px;
+      margin-bottom: 15px;
+    }
+
+    /* Hellblauer Button */
+    .feed-btn {
+      background-color: var(--btn-color);
+      color: #2b2b2b;
+      border: 2px solid #70a1ff;
+      padding: 10px 18px;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0px 4px 0px #70a1ff;
+      transition: all 0.1s ease;
+      font-family: inherit;
+    }
+
+    .feed-btn:hover:not(:disabled) {
+      background-color: var(--btn-hover);
+      transform: translateY(-2px);
+      box-shadow: 0px 6px 0px #70a1ff;
+    }
+
+    .feed-btn:active:not(:disabled) {
+      transform: translateY(4px);
+      box-shadow: 0px 0px 0px #70a1ff;
+    }
+
+    .feed-btn:disabled {
+      background-color: var(--btn-disabled);
+      border-color: #b0b0b0;
+      box-shadow: none;
+      cursor: not-allowed;
+      color: #777;
+    }
+
+    /* Status-Text */
+    .status-text {
+      margin-top: 12px;
+      font-size: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <button class="skip-btn" onclick="skipDay()" title="Zeit überspringen (Testen)">☀️</button>
+
+  <div class="counter">
+    <span id="fish-count">0</span> 🐟
+  </div>
+
+  <div class="cat-container">
+    <svg width="100" height="100" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
+      <rect x="7" y="5" width="2" height="1" fill="#1a1a1a"/>
+      <rect x="15" y="5" width="2" height="1" fill="#1a1a1a"/>
+      <rect x="7" y="6" width="1" height="3" fill="#1a1a1a"/>
+      <rect x="8" y="6" width="1" height="2" fill="#fca5a5"/>
+      <rect x="16" y="6" width="1" height="3" fill="#1a1a1a"/>
+      <rect x="15" y="6" width="1" height="2" fill="#fca5a5"/>
+      
+      <rect x="9" y="6" width="6" height="1" fill="#1a1a1a"/>
+      <rect x="6" y="9" width="1" height="11" fill="#1a1a1a"/>
+      <rect x="17" y="9" width="1" height="11" fill="#1a1a1a"/>
+      <rect x="7" y="20" width="10" height="1" fill="#1a1a1a"/>
+      
+      <rect x="7" y="9" width="10" height="11" fill="#ffffff"/>
+      <rect x="8" y="7" width="8" height="2" fill="#ffffff"/>
+      
+      <rect x="9" y="10" width="1" height="3" fill="#1a1a1a"/>
+      <rect x="14" y="10" width="1" height="3" fill="#1a1a1a"/>
+      <rect x="11" y="12" width="2" height="1" fill="#f472b6"/>
+      
+      <rect x="8" y="12" width="1" height="1" fill="#fbcfe8"/>
+      <rect x="15" y="12" width="1" height="1" fill="#fbcfe8"/>
+      
+      <rect x="9" y="18" width="1" height="2" fill="#d1d5db"/>
+      <rect x="11" y="18" width="2" height="2" fill="#d1d5db"/>
+      <rect x="14" y="18" width="1" height="2" fill="#d1d5db"/>
+      
+      <rect x="5" y="18" width="1" height="2" fill="#1a1a1a"/>
+      <rect x="5" y="20" width="2" height="1" fill="#1a1a1a"/>
+      <rect x="6" y="18" width="1" height="2" fill="#ffffff"/>
+    </svg>
+  </div>
+
+  <button class="feed-btn" id="feed-btn" onclick="feedCat()">
+    feed me!<3 🐟
+  </button>
+
+  <div class="status-text" id="status-text">
+    you haven’t feed the cat yet (O_O)!
+  </div>
+
+  <script>
+    let count = parseInt(localStorage.getItem('cat_fish_count')) || 0;
+    let lastFedTime = localStorage.getItem('cat_last_fed');
+
+    const fishCountEl = document.getElementById('fish-count');
+    const feedBtn = document.getElementById('feed-btn');
+    const statusTextEl = document.getElementById('status-text');
+
+    fishCountEl.innerText = count;
+
+    function checkReset() {
+      if (!lastFedTime) return false;
+
+      const now = new Date();
+      const lastFed = new Date(parseInt(lastFedTime));
+
+      let resetTime = new Date(now);
+      resetTime.setHours(6, 0, 0, 0);
+
+      if (now < resetTime) {
+        resetTime.setDate(resetTime.getDate() - 1);
+      }
+
+      return lastFed < resetTime;
+    }
+
+    function updateUI() {
+      const needsReset = checkReset();
+
+      if (needsReset || !lastFedTime) {
+        feedBtn.disabled = false;
+        statusTextEl.innerText = "you haven’t feed the cat yet (O_O)!";
+      } else {
+        feedBtn.disabled = true;
+        statusTextEl.innerText = "well done! come back tomorrow ⋆˙⟡";
+      }
+    }
+
+    function feedCat() {
+      count++;
+      lastFedTime = new Date().getTime();
+
+      localStorage.setItem('cat_fish_count', count);
+      localStorage.setItem('cat_last_fed', lastFedTime);
+
+      fishCountEl.innerText = count;
+      updateUI();
+    }
+
+    // Funktion für den Sonnen-Knopf (setzt die Fütterungszeit zurück)
+    function skipDay() {
+      localStorage.removeItem('cat_last_fed');
+      lastFedTime = null;
+      updateUI();
+    }
+
+    updateUI();
+  </script>
+</body>
+</html>

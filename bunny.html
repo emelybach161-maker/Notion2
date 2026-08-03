@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notion Bunny Widget</title>
-  <!-- Süsse Pixel-Schriftart laden -->
+  <!-- Pixel-Schriftart laden -->
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     * {
@@ -24,6 +24,7 @@
     }
 
     .widget-card {
+      position: relative;
       width: 280px;
       height: 280px;
       background-color: #ffffff;
@@ -33,7 +34,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      padding: 20px 15px;
+      padding: 20px 15px 15px 15px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.05);
       text-align: center;
     }
@@ -54,7 +55,7 @@
       transition: transform 0.2s ease;
     }
 
-    /* Animation beim Füttern */
+    /* Hüpf-Animation beim Füttern */
     .happy {
       animation: bounce 0.6s ease infinite alternate;
     }
@@ -64,14 +65,15 @@
       100% { transform: translateY(-8px); }
     }
 
+    /* Hellblauer Button */
     .btn-feed {
       font-family: 'Press Start 2P', monospace;
-      font-size: 11px;
-      background-color: #ffb7c5;
+      font-size: 10px;
+      background-color: #89cff0; /* Hellblau */
       color: #ffffff;
       border: 2px solid #000000;
       border-radius: 20px;
-      padding: 10px 16px;
+      padding: 10px 14px;
       cursor: pointer;
       box-shadow: 0 4px 0 #000000;
       transition: all 0.1s ease;
@@ -97,6 +99,24 @@
       min-height: 24px;
       display: flex;
       align-items: center;
+      padding-right: 25px; /* Platz für den Counter lassen */
+      padding-left: 5px;
+    }
+
+    /* Karotten-Counter unten rechts */
+    .carrot-counter {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      font-size: 9px;
+      color: #333333;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      background-color: #f7f7f7;
+      border: 1.5px solid #000000;
+      border-radius: 10px;
+      padding: 3px 6px;
     }
   </style>
 </head>
@@ -104,46 +124,56 @@
 
   <div class="widget-card">
     <div class="bunny-container">
-      <!-- Der Pixel-Hase aus deinem Bild als Vektorgrafik eingebettet -->
+      <!-- Pixel-Hase -->
       <svg class="bunny" id="bunny" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
         <!-- Outlines -->
         <path fill="#000" d="M8 3h1v1H8zM9 4h1v3H9zM10 3h1v1h-1zM11 4h1v3h-1zM7 4h1v1H7zM6 5h1v2H6zM5 7h1v1H5zM4 8h1v5H4zM5 13h1v1H5zM6 14h5v1H6zM11 13h1v1h-1zM12 8h1v5h-1zM8 7h1v1H8z"/>
-        <!-- Körper (Weiß) -->
+        <!-- Körper -->
         <path fill="#fff" d="M8 4h1v3H8zM10 4h1v3h-1zM7 5h2v2H7zM6 7h5v1H6zM5 8h7v5H5zM6 13h5v1H6z"/>
         <!-- Ohr-Rosa -->
         <path fill="#ffd0d7" d="M8 5h1v2H8zM10 5h1v2h-1z"/>
-        <!-- Blümchen (Gelb & Rot & Blau) -->
+        <!-- Blümchen -->
         <path fill="#fdd835" d="M7 6h1v1H7z"/>
         <path fill="#e57373" d="M8 6h1v1H8zM7 5h1v1H7z"/>
         <path fill="#78909c" d="M6 6h1v1H6zM6 7h1v1H6z"/>
         <!-- Augen & Bäckchen -->
         <path fill="#000" d="M8 10h2v1H8zM12 10h1v1h-1z"/>
         <path fill="#ffb7c5" d="M7 11h2v1H7zM12 11h1v1h-1z"/>
-        <!-- Nase (Rosa) -->
+        <!-- Nase -->
         <path fill="#f8bbd0" d="M10 11h1v1h-1z"/>
       </svg>
     </div>
 
-    <button class="btn-feed" id="feedBtn">feed me!&lt;3</button>
+    <!-- Hellblauer Button mit Karotte -->
+    <button class="btn-feed" id="feedBtn">feed me! 🥕 &lt;3</button>
     <div class="status-text" id="statusText">you haven't fed your bunny yet</div>
+
+    <!-- Karotten Counter unten rechts -->
+    <div class="carrot-counter">
+      <span>🥕</span><span id="counterCount">0</span>
+    </div>
   </div>
 
   <script>
     const feedBtn = document.getElementById('feedBtn');
     const statusText = document.getElementById('statusText');
     const bunny = document.getElementById('bunny');
+    const counterCount = document.getElementById('counterCount');
 
-    // Funktion um den Reset-Zeitpunkt (heute/gestern 06:00 Uhr) zu ermitteln
     function getLastResetTime() {
       const now = new Date();
       const reset = new Date(now);
       reset.setHours(6, 0, 0, 0); // 6:00 Uhr morgens
       
-      // Wenn es heute vor 6 Uhr morgens ist, war der letzte Reset gestern um 6 Uhr
       if (now < reset) {
         reset.setDate(reset.getDate() - 1);
       }
       return reset.getTime();
+    }
+
+    function updateCounterDisplay() {
+      const count = localStorage.getItem('bunny_feed_count') || 0;
+      counterCount.innerText = count;
     }
 
     function checkFedStatus() {
@@ -151,12 +181,11 @@
       const lastReset = getLastResetTime();
 
       if (lastFedTimestamp && parseInt(lastFedTimestamp) > lastReset) {
-        // Hase wurde nach dem letzten 6-Uhr-Reset gefüttert
         setFedState(true);
       } else {
-        // Hase wurde noch nicht gefüttert
         setFedState(false);
       }
+      updateCounterDisplay();
     }
 
     function setFedState(isFed) {
@@ -172,11 +201,20 @@
     }
 
     feedBtn.addEventListener('click', () => {
+      // Zeit speichern
       localStorage.setItem('bunny_last_fed', Date.now());
+
+      // Counter hochzählen
+      let currentCount = parseInt(localStorage.getItem('bunny_feed_count') || 0);
+      currentCount++;
+      localStorage.setItem('bunny_feed_count', currentCount);
+
+      // Status & Counter aktualisieren
       setFedState(true);
+      updateCounterDisplay();
     });
 
-    // Prüfe beim Laden
+    // Beim Laden prüfen
     checkFedStatus();
   </script>
 </body>
